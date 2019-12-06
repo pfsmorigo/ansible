@@ -5,3 +5,5 @@ home_dir: "{{ lookup('env','HOME') }}"
 fullname: ""
 email: ""
 
+grub_ttf_file: /usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf
+grub_pf2_file: /boot/grub/fonts/DejaVuSansMono.pf2
