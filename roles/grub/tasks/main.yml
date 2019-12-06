@@ -1,0 +1,22 @@
+---
+
+- name: Install font package
+  become: true
+  package:
+    name: fonts-dejavu-core
+    state: present
+
+- name: Generate pf2 font file in /boot/grub
+  become: yes
+  shell: grub-mkfont -s 30 -o "{{ grub_pf2_file }}" "{{ grub_ttf_file }}"
+
+- name: Set file in grub configuration
+  become: yes
+  lineinfile:
+    dest: /etc/default/grub
+    regexp: "^GRUB_FONT="
+    line: "GRUB_FONT={{ grub_pf2_file }}"
+
+- name: Update GRUB
+  become: yes
+  shell: update-grub

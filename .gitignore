@@ -1,0 +1,4 @@
+*.retry
+*.swp
+group_vars/all
+site.yml

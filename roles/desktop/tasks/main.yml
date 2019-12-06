@@ -1,0 +1,25 @@
+---
+
+- name: Install basic packages
+  become: true
+  package: name={{ item }} state=present
+  with_items:
+    - copyq
+    - deja-dup
+    - dia
+    - feh
+    - git
+    - gnupg
+    - i3
+    - i3blocks
+    - lightdm
+    - mosh
+    - pass
+    - pavucontrol
+    - rofi
+    - rxvt-unicode-256color
+    - screen
+    - smplayer
+    - tig
+    - vim
+    - xsel

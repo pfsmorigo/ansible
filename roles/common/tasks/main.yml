@@ -1,0 +1,44 @@
+---
+- name: Show variables
+  vars:
+    msg: |
+         Username.............. {{ username }}
+         Home directory........ {{ home_dir }}
+         Fullname.............. {{ fullname }}
+         Email................. {{ email }}
+
+  debug:
+    msg: "{{ msg.split('\n')[:-1] }}"
+
+- name: Check variable
+  assert:
+    that:
+      - username != ""
+      - home_dir != ""
+      - fullname != ""
+      - email != ""
+
+- name: Install basic packages
+  become: true
+  package: name={{ item }} state=present
+  with_items:
+    - bc
+    - curl
+    - git
+    - rsync
+    - screen
+    - stow
+    - sudo
+    - tar
+    - tree
+    - vim
+    - wget
+    - cryptsetup
+
+- name: Install Debian based distro basic packages
+  become: yes
+  when: ansible_os_family == "Debian"
+  package: name={{ item }} state=present
+  with_items:
+    - apt-file
+    - ncurses-term # fix missing rxvt-256color terminfo bug

@@ -1,0 +1,82 @@
+---
+
+- name: Use custom directory layout
+  register: command
+  changed_when: command.rc == 0
+  failed_when: command.rc > 2
+  shell: |
+    test -e ~/{{ item.from }} -a ! -e ~/{{ item.to }} && \
+    mv ~/{{ item.from }} ~/{{ item.to }}
+  with_items:
+    - { to: '~/desktop',        from: '~/Desktop'   }
+    - { to: '~/documents',      from: '~/Documents' }
+    - { to: '~/downloads',      from: '~/Downloads' }
+    - { to: '~/media/music',    from: '~/Music'     }
+    - { to: '~/media/pictures', from: '~/Pictures'  }
+    - { to: '~/media/videos',   from: '~/Videos'    }
+    - { to: '~/public',         from: '~/Public'    }
+    - { to: '~/templates',      from: '~/Templates' }
+
+- name: Create common directories
+  register: command
+  changed_when: command.rc == 0
+  failed_when: command.rc > 2
+  shell: test ! -e ~/{{ item }} && mkdir -p ~/{{ item }}
+  with_items:
+    - .config/git
+    - .local/bin
+    - .local/share
+
+- name: Configure git local user
+  tags: git
+  template:
+    src: git_local.j2
+    dest: ~/.config/git/local
+    force: no
+
+- name: Checkout personal repositories
+  tags: git
+  git:
+    repo: http://github.com/pfsmorigo/{{ item }}
+    dest: ~/{{ item }}
+    update: no
+  with_items:
+    - scripts
+    - dotfiles
+
+- name: Backup initial default configurations
+  register: command
+  changed_when: command.rc == 0
+  failed_when: command.rc > 2
+  shell: test ! -h ~/{{ item }} && mv ~/{{ item }} ~/{{ item }}X
+  with_items:
+    - .bash_profile
+    - .config/user-dirs.dirs
+    - .config/user-dirs.locale
+
+- name: Run stow for dotfiles
+  tags: stow
+  changed_when: false
+  args:
+    chdir: ~/dotfiles
+  command: stow {{ item }}
+  with_items:
+    - bash
+    - git
+    - screen
+    - vim
+    - xdg
+
+- name: Add .bash_profile call in .bashrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    regexp: "~/.bash_profile"
+    line: "\n[ -n \"$PS1\" ] && . ~/.bash_profile"
+    insertafter: EOF
+
+- name: Run stow for scripts
+  tags: stow
+  changed_when: false
+  args:
+    chdir: ~/scripts
+  command: stow -t ~/.local/bin basic
