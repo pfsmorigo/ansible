@@ -48,11 +48,18 @@
   register: command
   changed_when: command.rc == 0
   failed_when: command.rc > 2
-  shell: test ! -h ~/{{ item }} && mv ~/{{ item }} ~/{{ item }}X
+  shell: test ! -h ~/{{ item }} && mv ~/{{ item }} ~/{{ item }}~
   with_items:
     - .bash_profile
     - .config/user-dirs.dirs
     - .config/user-dirs.locale
+
+- name: Run stow for scripts
+  tags: stow
+  changed_when: false
+  args:
+    chdir: ~/scripts
+  command: stow -t ~/.local/bin basic
 
 - name: Run stow for dotfiles
   tags: stow
@@ -65,7 +72,6 @@
     - git
     - screen
     - vim
-    - xdg
 
 - name: Add .bash_profile call in .bashrc
   lineinfile:
@@ -73,10 +79,3 @@
     regexp: "~/.bash_profile"
     line: "\n[ -n \"$PS1\" ] && . ~/.bash_profile"
     insertafter: EOF
-
-- name: Run stow for scripts
-  tags: stow
-  changed_when: false
-  args:
-    chdir: ~/scripts
-  command: stow -t ~/.local/bin basic

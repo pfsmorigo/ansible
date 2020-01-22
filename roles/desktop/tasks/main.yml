@@ -1,6 +1,14 @@
 ---
 
-- name: Install basic packages
+- name: Create common directories
+  register: command
+  changed_when: command.rc == 0
+  failed_when: command.rc > 2
+  shell: test ! -e ~/{{ item }} && mkdir -p ~/{{ item }}
+  with_items:
+    - .local/share/fonts
+
+- name: Install packages
   become: true
   package: name={{ item }} state=present
   with_items:
@@ -8,6 +16,7 @@
     - deja-dup
     - dia
     - feh
+    - fonts-powerline
     - git
     - gnupg
     - i3
@@ -23,3 +32,50 @@
     - tig
     - vim
     - xsel
+
+- name: Run stow for scripts
+  changed_when: false
+  args:
+    chdir: ~/scripts
+  command: stow -t ~/.local/bin desktop
+
+- name: Run stow for dotfiles
+  tags: stow
+  changed_when: false
+  args:
+    chdir: ~/dotfiles
+  command: stow {{ item }}
+  with_items:
+    - xdg
+    - x11
+
+- name: Checkout powerline fonts repository
+  git:
+    repo: https://github.com/powerline/fonts
+    dest: ~/projects/powerline_fonts
+    update: no
+
+- name: Symlink some powerline fonts
+  file:
+    src: "~/projects/powerline_fonts/{{ item.dir }}/{{ item.file }}"
+    dest: "~/.local/share/fonts/{{ item.file}}"
+    state: link
+  loop:
+    - { dir: "UbuntuMono", file: "Ubuntu Mono derivative Powerline.ttf" }
+    - { dir: "UbuntuMono", file: "Ubuntu Mono derivative Powerline Bold.ttf" }
+    - { dir: "UbuntuMono", file: "Ubuntu Mono derivative Powerline Bold Italic.ttf" }
+    - { dir: "UbuntuMono", file: "Ubuntu Mono derivative Powerline Italic.ttf" }
+
+- name: Refresh font cache
+  changed_when: false
+  command: fc-cache -f ~/.local/share/fonts
+
+- name: Run stow for i3
+  changed_when: false
+  args:
+    chdir: ~/dotfiles
+  command: stow i3
+
+- name: Run i3config
+  shell: ~/.local/bin/i3config
+  ignore_errors: yes
