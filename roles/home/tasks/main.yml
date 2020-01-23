@@ -44,6 +44,13 @@
     - scripts
     - dotfiles
 
+- name: Set push url for repositories
+  changed_when: false
+  shell: cd ~/{{ item }} && git remote set-url --push origin git@github.com:pfsmorigo/{{ item }}
+  with_items:
+    - scripts
+    - dotfiles
+
 - name: Backup initial default configurations
   register: command
   changed_when: command.rc == 0
